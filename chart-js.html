@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>All Charts with Chart.js - Dynamic</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      max-width: 900px;
+      margin: 20px auto;
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    h2 {
+      text-align: center;
+      margin-top: 50px;
+    }
+    canvas {
+      display: block;
+      margin: 20px auto 60px;
+      max-width: 600px;
+      height: 300px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Multiple Chart.js Charts Demo</h1>
+
+  <h2>Area Chart</h2>
+  <canvas id="areaChart"></canvas>
+
+  <h2>Bar Chart</h2>
+  <canvas id="barChart"></canvas>
+
+  <h2>Bubble Chart</h2>
+  <canvas id="bubbleChart"></canvas>
+
+  <h2>Doughnut Chart</h2>
+  <canvas id="doughnutChart"></canvas>
+
+  <h2>Pie Chart</h2>
+  <canvas id="pieChart"></canvas>
+
+  <h2>Line Chart</h2>
+  <canvas id="lineChart"></canvas>
+
+  <h2>Mixed Chart Types</h2>
+  <canvas id="mixedChart"></canvas>
+
+  <h2>Polar Area Chart</h2>
+  <canvas id="polarAreaChart"></canvas>
+
+  <h2>Radar Chart</h2>
+  <canvas id="radarChart"></canvas>
+
+  <h2>Scatter Chart</h2>
+  <canvas id="scatterChart"></canvas>
+
+<script>
+  // Utils for data generation (like Chart.js examples)
+  const Utils = {
+    rand: (min=0, max=100) => Math.floor(Math.random()*(max-min+1)) + min,
+    numbers: (cfg={}) => Array.from({length: cfg.count || 8}, () => Utils.rand(cfg.min||0, cfg.max||100)),
+    months: (cfg={}) => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].slice(0, cfg.count || 12),
+    bubbles: (cfg={}) => Array.from({length: cfg.count || 8}, () => ({
+      x: Utils.rand(cfg.xMin || 0, cfg.xMax || 100),
+      y: Utils.rand(cfg.yMin || 0, cfg.yMax || 100),
+      r: Utils.rand(cfg.rMin || 5, cfg.rMax || 15)
+    })),
+    colors: [
+      'rgba(255, 99, 132, 0.5)', 
+      'rgba(54, 162, 235, 0.5)', 
+      'rgba(55, 206, 86, 0.5)', 
+      'rgba(75, 192, 192, 0.5)', 
+      'rgba(153, 102, 255, 0.5)', 
+      'rgba(1, 159, 64, 0.5)'
+    ]
+  };
+
+  const chartsToRender = [
+    {
+      id: 'areaChart',
+      type: 'line', // Area chart = line chart with fill:true
+      label: 'Area Dataset',
+      dataCount: 7,
+      color: Utils.colors[0],
+      options: {
+        fill: true,
+        tension: 0.4
+      }
+    },
+    {
+      id: 'barChart',
+      type: 'bar',
+      label: 'Bar Dataset',
+      dataCount: 7,
+      color: Utils.colors[1]
+    },
+    {
+      id: 'bubbleChart',
+      type: 'bubble',
+      label: 'Bubble Dataset',
+      dataCount: 10,
+      color: Utils.colors[2],
+      data: Utils.bubbles({count: 10, xMin: 0, xMax: 100, yMin: 0, yMax: 100, rMin: 5, rMax: 15})
+    },
+    {
+      id: 'doughnutChart',
+      type: 'doughnut',
+      label: 'Doughnut Dataset',
+      dataCount: 5,
+      color: ['red', 'blue', 'green', 'orange', 'purple']
+    },
+    {
+      id: 'lineChart',
+      type: 'line',
+      label: 'Line Dataset',
+      dataCount: 7,
+      color: Utils.colors[3],
+      options: {
+        fill: false,
+        tension: 0.4
+      }
+    },
+    {
+      id: 'mixedChart',
+      type: 'bar', // Mixed chart requires special handling below
+      label: 'Mixed Dataset',
+      dataCount: 7,
+      color: Utils.colors[4],
+      isMixed: true
+    },
+    {
+      id: 'polarAreaChart',
+      type: 'polarArea',
+      label: 'Polar Area Dataset',
+      dataCount: 5,
+      color: ['rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)', 'rgba(75, 192, 192, 0.7)', 'rgba(153, 102, 255, 0.7)']
+    },
+    {
+      id: 'radarChart',
+      type: 'radar',
+      label: 'Radar Dataset',
+      dataCount: 6,
+      color: 'rgba(255, 99, 132, 0.5)'
+    },
+    {
+      id: 'scatterChart',
+      type: 'scatter',
+      label: 'Scatter Dataset',
+      dataCount: 10,
+      color: Utils.colors[5],
+      data: Utils.bubbles({count: 10, xMin: 0, xMax: 100, yMin: 0, yMax: 100, rMin: 5, rMax: 15})
+    },
+    {
+    id: 'pieChart',
+    type: 'pie',
+    label: 'Pie Dataset',
+    dataCount: 5,
+    color: ['red', 'blue', 'green', 'orange', 'purple']
+    }
+
+  ];
+
+  function renderMixedChart(ctx, config) {
+    new Chart(ctx, {
+      data: {
+        labels: Utils.months({count: config.dataCount}),
+        datasets: [
+          {
+            type: 'bar',
+            label: 'Bar Dataset',
+            data: Utils.numbers({count: config.dataCount, min: 10, max: 50}),
+            backgroundColor: Utils.colors[4],
+          },
+          {
+            type: 'line',
+            label: 'Line Dataset',
+            data: Utils.numbers({count: config.dataCount, min: 30, max: 70}),
+            borderColor: 'rgb(54, 162, 235)',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true }
+        }
+      }
+    });
+  }
+
+  function renderChart(config) {
+    const ctx = document.getElementById(config.id).getContext('2d');
+
+    if (config.isMixed) {
+      renderMixedChart(ctx, config);
+      return;
+    }
+
+    const chartData = config.data || Utils.numbers({count: config.dataCount});
+
+    new Chart(ctx, {
+      type: config.type,
+      data: {
+        labels: config.type === 'scatter' || config.type === 'bubble' ? undefined : Utils.months({count: config.dataCount}),
+        datasets: [{
+          label: config.label,
+          data: chartData,
+          backgroundColor: config.color,
+          borderColor: config.color,
+          fill: config.options?.fill || false,
+          tension: config.options?.tension || 0
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true }
+        },
+        scales: (config.type === 'scatter' || config.type === 'bubble') ? {
+          x: { type: 'linear', position: 'bottom' },
+          y: { type: 'linear' }
+        } : {}
+      }
+    });
+  }
+
+  chartsToRender.forEach(renderChart);
+</script>
+
+</body>
+</html>
