@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chart.js + Alpine.js</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <style>
+    body {
+      max-width: 900px;
+      margin: 20px auto;
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+        text-align: center;
+    }
+    h2 {
+      text-align: center;
+      margin-top: 40px;
+    }
+    canvas {
+      display: block;
+      margin: 20px auto;
+      max-width: 600px;
+      height: 300px;
+    }
+  </style>
+</head>
+<body x-data="chartManager" x-init="$nextTick(() => init())">
+
+    <h1>Multiple Chart.js Charts In Alpine.js</h1>
+
+  <template x-for="cfg in charts" :key="cfg.id">
+    <div>
+      <h2 x-text="cfg.label"></h2>
+      <canvas :id="cfg.id"></canvas>
+    </div>
+  </template>
+
+  <script>
+    function chartManager() {
+      const Utils = {
+        rand: (min = 0, max = 100) => Math.floor(Math.random() * (max - min + 1)) + min,
+        numbers: (count = 7) => Array.from({ length: count }, () => Utils.rand(10, 100)),
+        months: (count = 7) => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'].slice(0, count),
+        bubbles: (count = 10) => Array.from({ length: count }, () => ({
+          x: Utils.rand(0, 100),
+          y: Utils.rand(0, 100),
+          r: Utils.rand(5, 15)
+        }))
+      };
+
+      return {
+        charts: [
+          { id: 'areaChart',
+            label: 'Area Chart', 
+            type: 'line', 
+            count: 7, 
+            color: 'rgba(255, 99, 132, 0.5)', 
+            fill: true },
+
+          { id: 'barChart', 
+            label: 'Bar Chart', 
+            type: 'bar', 
+            count: 7, 
+            color: 'rgba(54, 162, 235, 0.5)' },
+
+          { id: 'bubbleChart', 
+            label: 'Bubble Chart', 
+            type: 'bubble', 
+            data: Utils.bubbles(8), 
+            color: 'rgba(255, 206, 86, 0.5)' },
+
+          { id: 'doughnutChart', 
+            label: 'Doughnut Chart', 
+            type: 'doughnut', 
+            count: 5, 
+            color: ['red', 'blue', 'green', 'orange', 'purple'] },
+          
+          { id: 'pieChart', 
+            label: 'Pie Chart', 
+            type: 'pie', 
+            count: 5, 
+            color: ['red', 'blue', 'green', 'orange', 'purple'] },
+
+          { id: 'lineChart', 
+            label: 'Line Chart',
+            type: 'line',
+            count: 7,
+            color: 'rgba(75,192,192,0.5)' },
+
+          { id: 'polarAreaChart', 
+            label: 'Polar Area Chart', 
+            type: 'polarArea', 
+            count: 5, 
+            color: ['red', 'blue', 'yellow', 'green', 'purple'] },
+
+          { id: 'radarChart', 
+            label: 'Radar Chart', 
+            type: 'radar', 
+            count: 6, 
+            color: 'rgba(153, 102, 255, 0.5)' },
+
+          { id: 'scatterChart', 
+            label: 'Scatter Chart', 
+            type: 'scatter', 
+            data: Utils.bubbles(10), 
+            color: 'rgba(255, 159, 64, 0.5)' },
+
+          { id: 'mixedChart', 
+            label: 'Mixed Chart', 
+            type: 'mixed', 
+            count: 7 } // Special handling
+        ],
+        init() {
+          this.charts.forEach(cfg => {
+            const canvas = document.getElementById(cfg.id);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+
+            if (cfg.type === 'mixed') {
+              new Chart(ctx, {
+                data: {
+                  labels: Utils.months(cfg.count),
+                  datasets: [
+                    {
+                      type: 'bar',
+                      label: 'Bar Part',
+                      data: Utils.numbers(cfg.count),
+                      backgroundColor: 'rgba(255, 99, 132, 0.5)'
+                    },
+                    {
+                      type: 'line',
+                      label: 'Line Part',
+                      data: Utils.numbers(cfg.count),
+                      borderColor: 'rgba(54, 162, 235, 1)',
+                      fill: false,
+                      tension: 0.4
+                    }
+                  ]
+                },
+                options: {
+                  responsive: true,
+                  plugins: {
+                    legend: { display: true }
+                  }
+                }
+              });
+              return;
+            }
+
+            const chartData = cfg.data || Utils.numbers(cfg.count);
+
+            new Chart(ctx, {
+              type: cfg.type,
+              data: {
+                labels: (cfg.type === 'bubble' || cfg.type === 'scatter') ? undefined : Utils.months(cfg.count),
+                datasets: [{
+                  label: cfg.label,
+                  data: chartData,
+                  backgroundColor: cfg.color,
+                  borderColor: cfg.color,
+                  fill: cfg.fill ?? false,
+                  tension: 0.4
+                }]
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: { display: true }
+                },
+                scales: (cfg.type === 'scatter' || cfg.type === 'bubble') ? {
+                  x: { type: 'linear', position: 'bottom' },
+                  y: { type: 'linear' }
+                } : {}
+              }
+            });
+          });
+        }
+      }
+    }
+  </script>
+  <!-- https://chatgpt.com/share/682aba8a-7348-800d-9928-f697a6fd8ec9 -->
+
+</body>
+</html>
